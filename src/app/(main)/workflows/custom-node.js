@@ -21,6 +21,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 const icons = {
     start: Play,
@@ -32,8 +37,9 @@ const icons = {
     condition: Zap,
     webhook: Webhook,
     delay: Clock,
+    placeholder: Plus,
     default: MessageSquare
-}
+};
 
 const colors = {
     start: 'bg-green-100 text-green-600 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
@@ -45,8 +51,9 @@ const colors = {
     condition: 'bg-yellow-100 text-yellow-600 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
     webhook: 'bg-pink-100 text-pink-600 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800',
     delay: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+    placeholder: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
     default: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
-}
+};
 
 const NodeHeader = ({ data, colorClass, Icon, isStart, isEnd }) => (
     <div className="flex items-center gap-3 mb-2">
@@ -358,7 +365,7 @@ const ButtonsNode = ({ data, id }) => {
                                 type="source"
                                 position={Position.Right}
                                 id={`btn-${btn.id}`}
-                                className="!w-3.5 !h-3.5 !bg-white !border-2 !border-purple-500 !right-[-26px]"
+                                className="!w-4 !h-4 !bg-white !border-2 !border-purple-500 !right-[-16px]"
                             />
                         </div>
                     ))}
@@ -530,7 +537,7 @@ const ListNode = ({ data, id }) => {
                                             type="source"
                                             position={Position.Right}
                                             id={`row-${row.id}`}
-                                            className="!w-3.5 !h-3.5 !bg-white !border-2 !border-green-500 !right-[-26px]"
+                                            className="!w-4 !h-4 !bg-white !border-2 !border-green-500 !right-[-16px]"
                                         />
                                     </div>
                                 ))}
@@ -641,6 +648,28 @@ const ConditionNode = ({ data, id }) => {
                         ))}
                     </div>
                 )}
+            </div>
+
+            {/* Branch Handles */}
+            <div className="flex flex-col gap-2 border-t pt-3 mt-1">
+                <div className="flex items-center justify-between relative h-7">
+                    <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200 uppercase tracking-wider">True</span>
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="true"
+                        className="!w-4 !h-4 !bg-white !border-2 !border-green-500 !right-[-15px]"
+                    />
+                </div>
+                <div className="flex items-center justify-between relative h-7">
+                    <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200 uppercase tracking-wider">False</span>
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="false"
+                        className="!w-4 !h-4 !bg-white !border-2 !border-red-500 !right-[-15px]"
+                    />
+                </div>
             </div>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -837,6 +866,74 @@ const EndNode = ({ data, id }) => {
     )
 }
 
+const PlaceholderNode = ({ data, id }) => {
+    const { setNodes } = useReactFlow();
+
+    const options = [
+        { type: 'message', label: 'Message', Icon: MessageSquare, color: 'text-blue-500' },
+        { type: 'question', label: 'Question', Icon: MousePointerClick, color: 'text-purple-500' },
+        { type: 'buttons', label: 'Buttons', Icon: MessageSquare, color: 'text-purple-500' },
+        { type: 'list', label: 'List', Icon: List, color: 'text-green-500' },
+        { type: 'condition', label: 'Condition', Icon: Zap, color: 'text-yellow-500' },
+        { type: 'webhook', label: 'Webhook', Icon: Webhook, color: 'text-pink-500' },
+        { type: 'delay', label: 'Delay', Icon: Clock, color: 'text-gray-500' },
+        { type: 'end', label: 'End', Icon: StopCircle, color: 'text-red-500' },
+    ];
+
+    const onSelect = (type, label) => {
+        setNodes((nds) =>
+            nds.map((node) => {
+                if (node.id === id) {
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            type,
+                            label,
+                        },
+                    };
+                }
+                return node;
+            })
+        );
+    };
+
+    return (
+        <div className="flex items-center justify-center h-full w-full">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border-2 border-dashed border-primary/50"
+                    >
+                        <Plus className="h-6 w-6" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2" align="center">
+                    <div className="grid grid-cols-1 gap-1">
+                        <div className="text-[10px] font-semibold text-muted-foreground px-2 py-1 uppercase tracking-wider">
+                            Select Node Type
+                        </div>
+                        {options.map((opt) => (
+                            <Button
+                                key={opt.type}
+                                variant="ghost"
+                                className="w-full justify-start gap-3 h-9 text-xs"
+                                onClick={() => onSelect(opt.type, opt.label)}
+                            >
+                                <div className={`p-1.5 rounded-full bg-muted ${opt.color}`}>
+                                    <opt.Icon className="h-3.5 w-3.5" />
+                                </div>
+                                {opt.label}
+                            </Button>
+                        ))}
+                    </div>
+                </PopoverContent>
+            </Popover>
+        </div>
+    );
+};
 
 export default memo(({ id, data }) => {
     const { setNodes } = useReactFlow();
@@ -854,6 +951,7 @@ export default memo(({ id, data }) => {
     const isCondition = data.type === 'condition';
     const isWebhook = data.type === 'webhook';
     const isDelay = data.type === 'delay';
+    const isPlaceholder = data.type === 'placeholder';
     const isEndWithLogic = isEnd;
 
     const handleDelete = useCallback((e) => {
@@ -873,7 +971,9 @@ export default memo(({ id, data }) => {
                 ${data.selected ? 'ring-2 ring-primary' : ''}
                 ${isStart ? 'border-2 border-green-500 bg-green-50 dark:bg-green-900/20' : ''}
                 ${isEnd ? 'border-2 border-red-500 bg-red-50 dark:bg-red-900/20' : ''}
-                ${!isStart && !isEnd ? 'border px-3 py-3' : 'px-4 py-3'}
+                ${isPlaceholder ? 'border-none bg-transparent shadow-none !min-w-0 !p-0 !max-w-none' : ''}
+                ${!isStart && !isEnd && !isPlaceholder ? 'border px-3 py-3' : ''}
+                ${(isStart || isEnd) && !isPlaceholder ? 'px-4 py-3' : ''}
             `}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -916,13 +1016,14 @@ export default memo(({ id, data }) => {
                 <Handle
                     type="target"
                     position={Position.Top}
-                    className={`w-3 h-3 !bg-muted-foreground ${isEnd ? '!bg-red-500' : ''}`}
+                    className={`w-4 h-4 !bg-muted-foreground ${isEnd ? '!bg-red-500' : ''}`}
                 />
             )}
 
-            <NodeHeader data={data} colorClass={colorClass} Icon={Icon} isStart={isStart} isEnd={isEnd} />
+            {!isPlaceholder && <NodeHeader data={data} colorClass={colorClass} Icon={Icon} isStart={isStart} isEnd={isEnd} />}
 
             {/* Interactive Components */}
+            {isPlaceholder && <PlaceholderNode data={data} id={id} />}
             {isList && <ListNode data={data} id={id} />}
             {isMessage && <MessageNode data={data} id={id} />}
             {isQuestion && <QuestionNode data={data} id={id} />}
@@ -932,11 +1033,11 @@ export default memo(({ id, data }) => {
             {isDelay && <DelayNode data={data} id={id} />}
             {isEndWithLogic && <EndNode data={data} id={id} />}
 
-            {!isEnd && !isButtons && !isList && (
+            {!isEnd && !isButtons && !isList && !isCondition && !isPlaceholder && (
                 <Handle
                     type="source"
                     position={Position.Bottom}
-                    className={`w-3 h-3 !bg-primary ${isStart ? '!bg-green-500' : ''}`}
+                    className={`w-4 h-4 !bg-primary ${isStart ? '!bg-green-500' : ''}`}
                 />
             )}
         </div>

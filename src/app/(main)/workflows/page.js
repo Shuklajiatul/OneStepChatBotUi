@@ -45,7 +45,7 @@ export default function WorkflowsPage() {
 
     const fetchWorkflows = async () => {
         try {
-            const response = await fetch('http://10.10.15.194:3006/api/flows', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`
@@ -92,7 +92,7 @@ export default function WorkflowsPage() {
         if (!deleteId) return;
 
         try {
-            const response = await fetch(`http://10.10.15.194:3006/api/flows/${deleteId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows/${deleteId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`

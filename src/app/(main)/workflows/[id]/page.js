@@ -68,7 +68,7 @@ function FlowEditor({ params }) {
 
     const fetchWorkflow = async (workflowId) => {
         try {
-            const response = await fetch(`http://10.10.15.194:3006/api/flows/${workflowId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows/${workflowId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`
@@ -216,6 +216,37 @@ function FlowEditor({ params }) {
                     }
                 });
             }
+
+            // Handle Conditions
+            if (node.type === 'condition') {
+                // True branch (from any condition since they all share the same true handle)
+                const trueTarget = node.data.conditions?.find(c => c.next)?.next;
+                if (trueTarget) {
+                    newEdges.push({
+                        id: `e-${node.id}-${trueTarget}-true`,
+                        source: node.id,
+                        sourceHandle: 'true',
+                        target: trueTarget,
+                        label: 'True',
+                        type: 'smoothstep',
+                        markerEnd: { type: MarkerType.ArrowClosed },
+                        style: { stroke: '#22c55e', strokeWidth: 2 },
+                    });
+                }
+                // False branch (default_next)
+                if (node.data.default_next) {
+                    newEdges.push({
+                        id: `e-${node.id}-${node.data.default_next}-false`,
+                        source: node.id,
+                        sourceHandle: 'false',
+                        target: node.data.default_next,
+                        label: 'False',
+                        type: 'smoothstep',
+                        markerEnd: { type: MarkerType.ArrowClosed },
+                        style: { stroke: '#ef4444', strokeWidth: 2 },
+                    });
+                }
+            }
         });
 
         const hasPositions = backendNodes.some(n => n.position && (n.position.x !== 0 || n.position.y !== 0));
@@ -326,7 +357,7 @@ function FlowEditor({ params }) {
                 id: newId,
                 type: 'custom',
                 position,
-                data: { label: 'Message', type: 'message' },
+                data: { label: 'Add Node', type: 'placeholder' },
             };
 
             const newEdge = {
@@ -447,6 +478,22 @@ function FlowEditor({ params }) {
                     backendNode.data.validation_type = node.data.validation_type || "text";
                 }
 
+                // Handle Condition output
+                if (nodeType === 'condition') {
+                    const trueEdge = edges.find(edge => edge.source === node.id && edge.sourceHandle === 'true');
+                    const falseEdge = edges.find(edge => edge.source === node.id && edge.sourceHandle === 'false');
+
+                    if (backendNode.data.conditions) {
+                        backendNode.data.conditions = backendNode.data.conditions.map(cond => ({
+                            ...cond,
+                            next: trueEdge ? trueEdge.target : null
+                        }));
+                    }
+                    backendNode.data.default_next = falseEdge ? falseEdge.target : null;
+                    backendNode.data.logicOperator = (backendNode.data.logicOperator || 'and').toUpperCase();
+                    backendNode.next = null;
+                }
+
                 return backendNode;
             });
 
@@ -470,8 +517,8 @@ function FlowEditor({ params }) {
             };
 
             const url = isNewWorkflow
-                ? 'http://10.10.15.194:3006/api/flows'
-                : `http://10.10.15.194:3006/api/flows/${id}`;
+                ? `${process.env.NEXT_PUBLIC_URL}/flows`
+                : `${process.env.NEXT_PUBLIC_URL}/flows/${id}`;
 
             const method = isNewWorkflow ? 'POST' : 'PUT';
 
@@ -509,7 +556,6 @@ function FlowEditor({ params }) {
             toast.error("Failed to save workflow");
         }
     };
-
 
     const handleSaveMetadata = () => {
         setIsMetadataDialogOpen(false);
@@ -566,11 +612,11 @@ function FlowEditor({ params }) {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    {/*
-                    <Button size="sm" variant="outline" onClick={() => router.push('/workflows')}>
-                        Discard
-                    </Button>
-                    */}
+
+                    {/* <Button size="sm" variant="outline" onClick={() => router.push('/workflows')}>
+                        Clear Workflow
+                    </Button> */}
+
                     <Button
                         size="sm"
                         onClick={handleSaveWorkflow}
