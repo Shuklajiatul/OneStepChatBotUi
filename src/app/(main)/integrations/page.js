@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -21,11 +21,136 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { MessageCircle, Cloud, CheckCircle2 } from "lucide-react"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import { MessageCircle, Cloud, CheckCircle2, Loader2, Plus, ArrowLeft, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function IntegrationsPage() {
     const [whatsappConfig, setWhatsappConfig] = useState(false)
     const [instagramConfig, setInstagramConfig] = useState(false)
+
+    const [workflows, setWorkflows] = useState([])
+    const [loadingFlows, setLoadingFlows] = useState(false)
+    const [selectedFlowId, setSelectedFlowId] = useState("")
+    const [whatsappNumber, setWhatsappNumber] = useState("")
+    const [isSaving, setIsSaving] = useState(false)
+    const [dialogView, setDialogView] = useState("list") // "list" or "form"
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+    useEffect(() => {
+        fetchWorkflows()
+    }, [])
+
+    const fetchWorkflows = async () => {
+        setLoadingFlows(true)
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch workflows');
+
+            const data = await response.json();
+            const flows = data.flows || [];
+            setWorkflows(flows);
+
+            // Check if any flow is already published
+            const hasPublished = flows.some(f => f.is_published);
+            setWhatsappConfig(hasPublished);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to load workflows");
+        } finally {
+            setLoadingFlows(false)
+        }
+    }
+
+    const publishedWorkflows = workflows.filter(f => f.is_published);
+
+    const handlePublish = async () => {
+        if (!selectedFlowId) {
+            toast.error("Please select a workflow");
+            return;
+        }
+
+        if (!whatsappNumber) {
+            toast.error("Please enter a WhatsApp number to publish");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows/${selectedFlowId}/publish`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    whatsapp_number: whatsappNumber
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error.message);
+            }
+
+            toast.success("Workflow published successfully!");
+            await fetchWorkflows();
+            setDialogView("list");
+            setSelectedFlowId("");
+            setWhatsappNumber("");
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message ? error.message : "Failed to publish workflow");
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    const handleUnpublish = async (flowId) => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows/${flowId}/unpublish`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Unpublish endpoint not found. Please contact support.');
+                }
+                throw new Error('Failed to unpublish workflow');
+            }
+
+            toast.success("Workflow unpublished successfully!");
+            fetchWorkflows();
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message || "Failed to unpublish workflow");
+        }
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -51,42 +176,144 @@ export default function IntegrationsPage() {
                     <CardContent>
                         {whatsappConfig ? (
                             <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                                <CheckCircle2 className="h-4 w-4" /> Connected
+                                <CheckCircle2 className="h-4 w-4" /> Connected ({publishedWorkflows.length} active)
                             </div>
                         ) : (
                             <div className="text-sm text-muted-foreground">Not connected</div>
                         )}
                     </CardContent>
                     <CardFooter>
-                        <Dialog>
+                        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                            setIsDialogOpen(open);
+                            if (open) setDialogView("list");
+                        }}>
                             <DialogTrigger asChild>
                                 <Button variant={whatsappConfig ? "outline" : "default"}>
-                                    {whatsappConfig ? "Manage" : "Connect"}
+                                    View WhatsApp
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px]">
+                            <DialogContent className={dialogView === "list" ? "sm:max-w-[1000px]" : "sm:max-w-[600px]"}>
                                 <DialogHeader>
-                                    <DialogTitle>Configure WhatsApp</DialogTitle>
-                                    <DialogDescription>
-                                        Enter your WhatsApp Business API credentials.
-                                    </DialogDescription>
+                                    <div className="flex items-center justify-between pr-8">
+                                        <div>
+                                            <DialogTitle>
+                                                {dialogView === "list" ? "WhatsApp Integrations" : "Add New Integration"}
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                {dialogView === "list"
+                                                    ? "Manage your published WhatsApp workflows."
+                                                    : "Connect a workflow to a WhatsApp number."}
+                                            </DialogDescription>
+                                        </div>
+                                        {dialogView === "list" && (
+                                            <Button size="sm" onClick={() => setDialogView("form")}>
+                                                <Plus className="mr-2 h-4 w-4" /> Add Publish
+                                            </Button>
+                                        )}
+                                    </div>
                                 </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="wa-id" className="text-right">
-                                            Account ID
-                                        </Label>
-                                        <Input id="wa-id" placeholder="123456789" className="col-span-3" />
+
+                                {dialogView === "list" ? (
+                                    <div className="py-4">
+                                        {loadingFlows ? (
+                                            <div className="flex justify-center py-8">
+                                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                            </div>
+                                        ) : publishedWorkflows.length === 0 ? (
+                                            <div className="text-center py-8 border border-dashed rounded-lg bg-muted/20">
+                                                <p className="text-sm text-muted-foreground mb-4">No published integrations found.</p>
+                                                <Button variant="outline" size="sm" onClick={() => setDialogView("form")}>
+                                                    <Plus className="mr-2 h-4 w-4" /> Publish your first workflow
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <div className="border rounded-md">
+                                                <Table className="w-full">
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>Workflow Name</TableHead>
+                                                            <TableHead>WhatsApp Number</TableHead>
+                                                            <TableHead>Status</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {publishedWorkflows.map((flow) => (
+                                                            <TableRow key={flow.flow_id}>
+                                                                <TableCell className="font-medium">{flow.flow_name}</TableCell>
+                                                                <TableCell>{flow.whatsapp_number || "N/A"}</TableCell>
+                                                                <TableCell>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-20"
+                                                                        onClick={() => handleUnpublish(flow.flow_id)}
+                                                                    >
+                                                                        {/* <Trash2 className="h-4 w-4" /> */}
+                                                                        <span className="text-red-500">Unpublish</span>
+                                                                    </Button>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="wa-token" className="text-right">
-                                            Token
-                                        </Label>
-                                        <Input id="wa-token" type="password" placeholder="••••••••" className="col-span-3" />
+                                ) : (
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="workflow" className="text-right">
+                                                Workflow
+                                            </Label>
+                                            <div className="col-span-3">
+                                                <Select value={selectedFlowId} onValueChange={setSelectedFlowId}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select workflow" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {workflows.filter(f => !f.is_published).map((flow) => (
+                                                            <SelectItem key={flow.flow_id} value={flow.flow_id}>
+                                                                {flow.flow_name}
+                                                            </SelectItem>
+                                                        ))}
+                                                        {workflows.filter(f => !f.is_published).length === 0 && (
+                                                            <div className="p-2 text-xs text-muted-foreground text-center">
+                                                                All workflows are published or no workflows found.
+                                                            </div>
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="wa-number" className="text-left">
+                                                WhatsApp Number
+                                            </Label>
+                                            <Input
+                                                id="wa-number"
+                                                placeholder="Enter Whatsapp Number"
+                                                className="col-span-3"
+                                                value={whatsappNumber}
+                                                onChange={(e) => setWhatsappNumber(e.target.value)}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+
                                 <DialogFooter>
-                                    <Button onClick={() => setWhatsappConfig(true)}>Save changes</Button>
+                                    {dialogView === "form" ? (
+                                        <div className="flex w-full justify-between gap-2">
+                                            <Button variant="ghost" size="sm" onClick={() => setDialogView("list")}>
+                                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to list
+                                            </Button>
+                                            <Button size="sm" onClick={handlePublish} disabled={isSaving}>
+                                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Save Publish
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(false)}>Close</Button>
+                                    )}
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -117,7 +344,7 @@ export default function IntegrationsPage() {
                         <Dialog>
                             <DialogTrigger asChild>
                                 <Button variant={instagramConfig ? "outline" : "default"}>
-                                    {instagramConfig ? "Manage" : "Connect"}
+                                    Manage
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-[425px]">
