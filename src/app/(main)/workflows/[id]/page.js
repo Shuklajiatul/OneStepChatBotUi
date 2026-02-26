@@ -48,6 +48,7 @@ function FlowEditor({ params }) {
     const [loading, setLoading] = useState(true);
     const [workflowName, setWorkflowName] = useState("New Workflow");
     const [workflowDescription, setWorkflowDescription] = useState("");
+    const [whatsappNumber, setWhatsappNumber] = useState("");
     const [isNewWorkflow, setIsNewWorkflow] = useState(false);
     const [isMetadataDialogOpen, setIsMetadataDialogOpen] = useState(false);
     const [isAddNodeOpen, setIsAddNodeOpen] = useState(false);
@@ -82,6 +83,7 @@ function FlowEditor({ params }) {
             const data = await response.json();
             setWorkflowName(data.flow.flow_name);
             setWorkflowDescription(data.flow.flow_description || "");
+            setWhatsappNumber(data.flow.whatsapp_number || "");
 
             try {
                 const flowData = JSON.parse(data.flow.flow_data);
@@ -497,23 +499,17 @@ function FlowEditor({ params }) {
                 return backendNode;
             });
 
-            const payload = isNewWorkflow ? {
+            const payload = {
                 flow_name: workflowName,
                 flow_description: workflowDescription,
                 channel: "whatsapp",
-                whatsapp_number: "+1234567890",
-                webhook_url: "",
+                whatsapp_number: whatsappNumber,
                 flow_data: {
                     nodes: backendNodes,
                     edges: flow.edges,
                     viewport: flow.viewport,
                     settings: {}
                 }
-            } : {
-                nodes: backendNodes,
-                edges: flow.edges,
-                viewport: flow.viewport,
-                settings: {}
             };
 
             const url = isNewWorkflow
@@ -711,6 +707,18 @@ function FlowEditor({ params }) {
                                 onChange={(e) => setWorkflowDescription(e.target.value)}
                                 className="col-span-3"
                                 resize="none"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="whatsapp" className="text-right">
+                                WhatsApp
+                            </Label>
+                            <Input
+                                id="whatsapp"
+                                value={whatsappNumber}
+                                onChange={(e) => setWhatsappNumber(e.target.value)}
+                                className="col-span-3"
+                                placeholder="Enter WhatsApp number"
                             />
                         </div>
                     </div>
