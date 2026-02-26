@@ -221,7 +221,6 @@ function FlowEditor({ params }) {
 
             // Handle Conditions
             if (node.type === 'condition') {
-                // True branch (from any condition since they all share the same true handle)
                 const trueTarget = node.data.conditions?.find(c => c.next)?.next;
                 if (trueTarget) {
                     newEdges.push({
@@ -463,14 +462,30 @@ function FlowEditor({ params }) {
                 }
 
                 // Handle List output
-                if (nodeType === 'list' && backendNode.data.sections) {
-                    backendNode.data.sections = backendNode.data.sections.map(section => ({
-                        ...section,
-                        rows: (section.rows || []).map(row => {
-                            const rowEdge = edges.find(edge => edge.source === node.id && edge.sourceHandle === `row-${row.id}`);
-                            return { ...row, next: rowEdge ? rowEdge.target : null };
-                        })
-                    }));
+                if (nodeType === 'list') {
+                    backendNode.data = {
+                        message: backendNode.data.message || "Browse our categories:",
+                        button_text: backendNode.data.button_text || "View Categories",
+                        sections: []
+                    };
+
+                    if (originalData.sections && Array.isArray(originalData.sections)) {
+                        backendNode.data.sections = originalData.sections.map(section => ({
+                            title: section.title || "Section",
+                            rows: (section.rows || []).map(row => {
+                                const rowEdge = edges.find(edge =>
+                                    edge.source === node.id && edge.sourceHandle === `row-${row.id}`
+                                );
+                                return {
+                                    id: row.id || uuidv4(),
+                                    title: row.title || "Option",
+                                    description: row.description || "",
+                                    next: rowEdge ? rowEdge.target : null
+                                };
+                            })
+                        }));
+                    }
+                    backendNode.next = null;
                 }
 
                 // Handle Question output
@@ -499,11 +514,8 @@ function FlowEditor({ params }) {
                 return backendNode;
             });
 
-            const payload = {
+            let payload = {
                 flow_name: workflowName,
-                flow_description: workflowDescription,
-                channel: "whatsapp",
-                whatsapp_number: whatsappNumber,
                 flow_data: {
                     nodes: backendNodes,
                     edges: flow.edges,
@@ -511,6 +523,12 @@ function FlowEditor({ params }) {
                     settings: {}
                 }
             };
+
+            if (isNewWorkflow) {
+                payload.flow_description = workflowDescription;
+                payload.channel = "whatsapp";
+                payload.whatsapp_number = whatsappNumber;
+            }
 
             const url = isNewWorkflow
                 ? `${process.env.NEXT_PUBLIC_URL}/flows`
@@ -617,7 +635,7 @@ function FlowEditor({ params }) {
                         size="sm"
                         onClick={handleSaveWorkflow}
                     >
-                        <Save className="mr-2 h-4 w-4" /> Save Workflow
+                        <Save className="mr-2 h-4 w-4" /> {isNewWorkflow ? "Create Workflow" : "Update Workflow"}
                     </Button>
                 </div>
             </div>
