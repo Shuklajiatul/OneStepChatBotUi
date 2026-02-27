@@ -167,13 +167,13 @@ export default function IntegrationsPage() {
                 <Card className={whatsappConfig ? "border-green-500/50 bg-green-500/5 dark:bg-green-500/10" : ""}>
                     <CardHeader>
                         <div className="flex items-center gap-2">
-	    		    <Image
-+                              src="/whatsapp-icon.svg"
-+                              alt="WhatsApp"
-+                              width={32}
-+                              height={32}
-+                           />
-	    		    <CardTitle>WhatsApp</CardTitle>
+                            <Image 
+                                src="/whatsapp-icon.svg" 
+                                alt="WhatsApp" 
+                                width={32} 
+                                height={32} 
+                            />
+                            <CardTitle>WhatsApp</CardTitle>
                         </div>
                         <CardDescription>
                             Connect to WhatsApp Business API to send and receive messages.
@@ -330,12 +330,12 @@ export default function IntegrationsPage() {
                 <Card className={instagramConfig ? "border-pink-500/50 bg-pink-500/5 dark:bg-pink-500/10" : ""}>
                     <CardHeader>
                         <div className="flex items-center gap-2">
-	    		    <Image
-+                              src="/instagram.svg"
-+                              alt="Instagram"
-+                              width={32}
-+                              height={32}
-+                           />
+                            <Image
+                                src="/instagram.svg"
+                                alt="Instagram"
+                                width={32}
+                                height={32}
+                            />
                             <CardTitle>Instagram</CardTitle>
                         </div>
                         <CardDescription>
