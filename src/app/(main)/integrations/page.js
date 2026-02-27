@@ -37,6 +37,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { MessageCircle, Cloud, CheckCircle2, Loader2, Plus, ArrowLeft, Trash2 } from "lucide-react"
+import Image from "next/image"
 import { toast } from "sonner"
 
 export default function IntegrationsPage() {
@@ -48,7 +49,7 @@ export default function IntegrationsPage() {
     const [selectedFlowId, setSelectedFlowId] = useState("")
     const [whatsappNumber, setWhatsappNumber] = useState("")
     const [isSaving, setIsSaving] = useState(false)
-    const [dialogView, setDialogView] = useState("list") // "list" or "form"
+    const [dialogView, setDialogView] = useState("list")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
     useEffect(() => {
@@ -166,8 +167,13 @@ export default function IntegrationsPage() {
                 <Card className={whatsappConfig ? "border-green-500/50 bg-green-500/5 dark:bg-green-500/10" : ""}>
                     <CardHeader>
                         <div className="flex items-center gap-2">
-                            <MessageCircle className={`h-8 w-8 ${whatsappConfig ? "text-green-500" : "text-muted-foreground"}`} />
-                            <CardTitle>WhatsApp</CardTitle>
+	    		    <Image
++                              src="/whatsapp-icon.svg"
++                              alt="WhatsApp"
++                              width={32}
++                              height={32}
++                           />
+	    		    <CardTitle>WhatsApp</CardTitle>
                         </div>
                         <CardDescription>
                             Connect to WhatsApp Business API to send and receive messages.
@@ -324,7 +330,12 @@ export default function IntegrationsPage() {
                 <Card className={instagramConfig ? "border-pink-500/50 bg-pink-500/5 dark:bg-pink-500/10" : ""}>
                     <CardHeader>
                         <div className="flex items-center gap-2">
-                            <Cloud className={`h-8 w-8 ${instagramConfig ? "text-pink-500" : "text-muted-foreground"}`} />
+	    		    <Image
++                              src="/instagram.svg"
++                              alt="Instagram"
++                              width={32}
++                              height={32}
++                           />
                             <CardTitle>Instagram</CardTitle>
                         </div>
                         <CardDescription>
