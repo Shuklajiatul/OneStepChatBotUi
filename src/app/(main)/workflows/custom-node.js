@@ -365,7 +365,7 @@ const ButtonsNode = ({ data, id }) => {
                                 type="source"
                                 position={Position.Right}
                                 id={`btn-${btn.id}`}
-                                className="!w-4 !h-4 !bg-white !border-2 !border-purple-500 !right-[-16px]"
+                                className="!w-5 !h-5 !rounded-full !bg-white !border-2 !border-purple-500 !right-[-20px]"
                             />
                         </div>
                     ))}
@@ -537,7 +537,7 @@ const ListNode = ({ data, id }) => {
                                             type="source"
                                             position={Position.Right}
                                             id={`row-${row.id}`}
-                                            className="!w-4 !h-4 !bg-white !border-2 !border-green-500 !right-[-16px]"
+                                            className="!w-5 !h-5 !rounded-full !bg-white !border-2 !border-green-500 !right-[-20px]"
                                         />
                                     </div>
                                 ))}
@@ -658,7 +658,7 @@ const ConditionNode = ({ data, id }) => {
                         type="source"
                         position={Position.Right}
                         id="true"
-                        className="!w-4 !h-4 !bg-white !border-2 !border-green-500 !right-[-15px]"
+                        className="!w-5 !h-5 !bg-white !rounded-full !border-2 !border-green-500 !right-[-20px]"
                     />
                 </div>
                 <div className="flex items-center justify-between relative h-7">
@@ -667,7 +667,7 @@ const ConditionNode = ({ data, id }) => {
                         type="source"
                         position={Position.Right}
                         id="false"
-                        className="!w-4 !h-4 !bg-white !border-2 !border-red-500 !right-[-15px]"
+                        className="!w-5 !h-5 !rounded-full !bg-white !border-2 !border-red-500 !right-[-20px]"
                     />
                 </div>
             </div>
@@ -822,7 +822,7 @@ const DelayNode = ({ data, id }) => {
             <Input
                 id={`delay-${id}`}
                 type="number"
-                value={data.originalData?.data?.duration || 0}
+                value={data.originalData?.data?.delay_seconds || 0}
                 onChange={handleChange}
                 className="nodrag text-xs h-8"
                 placeholder="0"
@@ -1016,7 +1016,8 @@ export default memo(({ id, data }) => {
                 <Handle
                     type="target"
                     position={Position.Top}
-                    className={`w-4 h-4 !bg-muted-foreground ${isEnd ? '!bg-red-500' : ''}`}
+		    id="target"
+                    className={`!w-5 !h-5 !rounded-full !bg-muted-foreground ${isEnd ? '!bg-red-500' : ''}`}
                 />
             )}
 
@@ -1037,7 +1038,8 @@ export default memo(({ id, data }) => {
                 <Handle
                     type="source"
                     position={Position.Bottom}
-                    className={`w-4 h-4 !bg-primary ${isStart ? '!bg-green-500' : ''}`}
+		    id="source"
+                    className={`!w-5 !h-5 !rounded-full !bg-primary ${isStart ? '!bg-green-500' : ''}`}
                 />
             )}
         </div>
