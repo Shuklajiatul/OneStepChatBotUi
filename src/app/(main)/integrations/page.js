@@ -251,10 +251,11 @@ export default function IntegrationsPage() {
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
-                                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-20"
+                                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                                                         onClick={() => handleUnpublish(flow.flow_id)}
                                                                     >
-                                                                        {/* <Trash2 className="h-4 w-4" /> */}
+                                                                        <Trash2 className="h-4 w-4 mr-2"/>
+									Unpublish
                                                                         <span className="text-red-500">Unpublish</span>
                                                                     </Button>
                                                                 </TableCell>
@@ -292,7 +293,7 @@ export default function IntegrationsPage() {
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
-                                            <Label htmlFor="wa-number" className="text-left">
+                                            <Label htmlFor="wa-number" className="text-right">
                                                 WhatsApp Number
                                             </Label>
                                             <Input
@@ -308,7 +309,7 @@ export default function IntegrationsPage() {
 
                                 <DialogFooter>
                                     {dialogView === "form" ? (
-                                        <div className="flex w-full justify-between gap-2">
+                                        <div className="flex w-full justify-between items-center gap-2">
                                             <Button variant="ghost" size="sm" onClick={() => setDialogView("list")}>
                                                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to list
                                             </Button>
