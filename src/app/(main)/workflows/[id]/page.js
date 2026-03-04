@@ -48,7 +48,6 @@ function FlowEditor({ params }) {
     const [loading, setLoading] = useState(true);
     const [workflowName, setWorkflowName] = useState("New Workflow");
     const [workflowDescription, setWorkflowDescription] = useState("");
-    const [whatsappNumber, setWhatsappNumber] = useState("");
     const [isNewWorkflow, setIsNewWorkflow] = useState(false);
     const [isMetadataDialogOpen, setIsMetadataDialogOpen] = useState(false);
     const [isAddNodeOpen, setIsAddNodeOpen] = useState(false);
@@ -83,7 +82,6 @@ function FlowEditor({ params }) {
             const data = await response.json();
             setWorkflowName(data.flow.flow_name);
             setWorkflowDescription(data.flow.flow_description || "");
-            setWhatsappNumber(data.flow.whatsapp_number || "");
 
             try {
                 const flowData = JSON.parse(data.flow.flow_data);
@@ -144,7 +142,7 @@ function FlowEditor({ params }) {
                 type = 'webhook';
             } else if (node.type === 'delay') {
                 label = "Delay";
-                subtext = `${node.data.duration || 0}s`;
+                subtext = `${node.data.delay_seconds || 0}s`;
                 type = 'delay';
             } else if (node.type === 'start' || node.id === 'start') {
                 label = "Start";
@@ -527,7 +525,7 @@ function FlowEditor({ params }) {
             if (isNewWorkflow) {
                 payload.flow_description = workflowDescription;
                 payload.channel = "whatsapp";
-                payload.whatsapp_number = whatsappNumber;
+                payload.whatsapp_number = null;
             }
 
             const url = isNewWorkflow
@@ -726,19 +724,7 @@ function FlowEditor({ params }) {
                                 className="col-span-3"
                                 resize="none"
                             />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="whatsapp" className="text-right">
-                                WhatsApp
-                            </Label>
-                            <Input
-                                id="whatsapp"
-                                value={whatsappNumber}
-                                onChange={(e) => setWhatsappNumber(e.target.value)}
-                                className="col-span-3"
-                                placeholder="Enter WhatsApp number"
-                            />
-                        </div>
+                        </div>   
                     </div>
                     <DialogFooter>
                         <Button type="submit" onClick={handleSaveMetadata}>
