@@ -118,10 +118,10 @@ export default function WorkflowsPage() {
 
         // Filter by search query
         if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase();
+            const query = searchQuery.toLowerCase();
             result = result.filter(w =>
-                w.name.toLowerCase().includes(q) ||
-                w.description.toLowerCase().includes(q)
+                w.name.toLowerCase().includes(query) ||
+                w.description.toLowerCase().includes(query)
             );
         }
 
@@ -153,9 +153,9 @@ export default function WorkflowsPage() {
     // Live search dropdown list
     const searchResults = useMemo(() => {
         if (!searchQuery.trim()) return [];
-        const q = searchQuery.toLowerCase();
+        const query = searchQuery.toLowerCase();
         return workflows
-            .filter(w => w.name.toLowerCase().includes(q) || w.description.toLowerCase().includes(q))
+            .filter(workflow => workflow.name.toLowerCase().includes(query) || workflow.description.toLowerCase().includes(query))
             .slice(0, 5);
     }, [workflows, searchQuery]);
 
