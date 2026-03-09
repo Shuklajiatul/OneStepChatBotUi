@@ -446,7 +446,7 @@ function FlowEditor({ params }) {
                 };
 
                 // Handle single output nodes (start, message, question, etc.)
-                const standardOutgoingEdge = edges.find(edge => edge.source === node.id && !edge.sourceHandle && !edge.label);
+                const standardOutgoingEdge = edges.find(edge => edge.source === node.id && (!edge.sourceHandle || edge.sourceHandle === 'source' || edge.sourceHandle === 'default' || edge.sourceHandle === 'a') && !edge.label);
                 if (standardOutgoingEdge) {
                     backendNode.next = standardOutgoingEdge.target;
                 }
@@ -493,6 +493,29 @@ function FlowEditor({ params }) {
                     backendNode.data.validation_type = node.data.validation_type || "text";
                 }
 
+                // Handle Webhook output
+                if (nodeType === 'webhook') {
+                    const wd = node.data.originalData?.data || {};
+                    const formatKeyValueArray = (arr) => {
+                        if (!Array.isArray(arr)) return arr || {};
+                        const obj = {};
+                        arr.forEach(item => {
+                            if (item.key) obj[item.key] = item.value || '';
+                        });
+                        return obj;
+                    };
+
+                    backendNode.data = {
+                        url: wd.url || '',
+                        method: wd.method || 'GET',
+                        headers: formatKeyValueArray(wd.headers),
+                        path_variables: formatKeyValueArray(wd.path_variables),
+                        params: formatKeyValueArray(wd.params),
+                        body: wd.body || {},
+                        response_variable: wd.response_variable || ''
+                    };
+                }
+
                 // Handle Condition output
                 if (nodeType === 'condition') {
                     const trueEdge = edges.find(edge => edge.source === node.id && edge.sourceHandle === 'true');
@@ -512,10 +535,53 @@ function FlowEditor({ params }) {
                 return backendNode;
             });
 
+            // Sort nodes in flow sequence order
+            const nodeMap = {};
+            backendNodes.forEach(n => { nodeMap[n.id] = n; });
+
+            // Find root nodes
+            const targetIds = new Set(flow.edges.map(e => e.target));
+            const rootNodes = backendNodes.filter(n => !targetIds.has(n.id));
+
+            const ordered = [];
+            const visited = new Set();
+
+            const traverse = (nodeId) => {
+                if (!nodeId || visited.has(nodeId)) return;
+                visited.add(nodeId);
+                const node = nodeMap[nodeId];
+                if (!node) return;
+                ordered.push(node);
+
+                // Follow the main 'next' chain
+                if (node.next) traverse(node.next);
+
+                // Follow button branches
+                if (node.data?.buttons) {
+                    node.data.buttons.forEach(btn => { if (btn.next) traverse(btn.next); });
+                }
+                // Follow list row branches
+                if (node.data?.sections) {
+                    node.data.sections.forEach(section => {
+                        (section.rows || []).forEach(row => { if (row.next) traverse(row.next); });
+                    });
+                }
+                // Follow condition branches
+                if (node.data?.conditions) {
+                    node.data.conditions.forEach(cond => { if (cond.next) traverse(cond.next); });
+                }
+                if (node.data?.default_next) traverse(node.data.default_next);
+            };
+
+            // Start traversal from root nodes
+            rootNodes.forEach(root => traverse(root.id));
+            // Append any remaining unvisited nodes (orphaned nodes)
+            backendNodes.forEach(n => { if (!visited.has(n.id)) ordered.push(n); });
+
             let payload = {
                 flow_name: workflowName,
                 flow_data: {
-                    nodes: backendNodes,
+                    nodes: ordered,
                     edges: flow.edges,
                     viewport: flow.viewport,
                     settings: {}
@@ -724,7 +790,7 @@ function FlowEditor({ params }) {
                                 className="col-span-3"
                                 resize="none"
                             />
-                        </div>   
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button type="submit" onClick={handleSaveMetadata}>
