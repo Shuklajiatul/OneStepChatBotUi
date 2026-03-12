@@ -36,6 +36,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 import { MessageCircle, Cloud, CheckCircle2, Loader2, Plus, ArrowLeft, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
@@ -167,11 +168,11 @@ export default function IntegrationsPage() {
                 <Card className={whatsappConfig ? "border-green-500/50 bg-green-500/5 dark:bg-green-500/10" : ""}>
                     <CardHeader>
                         <div className="flex items-center gap-2">
-                            <Image 
-                                src="/whatsapp-icon.svg" 
-                                alt="WhatsApp" 
-                                width={32} 
-                                height={32} 
+                            <Image
+                                src="/whatsapp-icon.svg"
+                                alt="WhatsApp"
+                                width={32}
+                                height={32}
                             />
                             <CardTitle>WhatsApp</CardTitle>
                         </div>
@@ -251,12 +252,11 @@ export default function IntegrationsPage() {
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
-                                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
                                                                         onClick={() => handleUnpublish(flow.flow_id)}
                                                                     >
-                                                                        <Trash2 className="h-4 w-4 mr-2"/>
-									Unpublish
-                                                                        <span className="text-red-500">Unpublish</span>
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Unpublish
                                                                     </Button>
                                                                 </TableCell>
                                                             </TableRow>
