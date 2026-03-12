@@ -6,8 +6,8 @@ import {
     LayoutDashboard,
     MessageCircle,
     MessagesSquare,
-    Radio
-    Settings,
+    Radio,
+    Settings
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -48,11 +48,11 @@ const data = {
             url: "/chat",
             icon: MessagesSquare,
         },
-	{
-	    title: "Live Chat",
-	    url: "/live-chat",
+        {
+            title: "Live Chat",
+            url: "/live-chat",
             icon: Radio,
-	}
+        },
         {
             title: "Settings",
             url: "/settings",
