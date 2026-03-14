@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
-import { MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, Play, StopCircle, Plus } from 'lucide-react';
+import { MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, Play, StopCircle, Plus, Headset } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
@@ -14,6 +14,7 @@ import { WebhookNode } from './nodes/WebhookNode';
 import { DelayNode } from './nodes/DelayNode';
 import { EndNode } from './nodes/EndNode';
 import { PlaceholderNode } from './nodes/PlaceholderNode';
+import { TalkToAgentNode } from './nodes/TalkToAgentNode';
 
 const icons = {
     start: Play,
@@ -25,6 +26,7 @@ const icons = {
     condition: Zap,
     webhook: Webhook,
     delay: Clock,
+    talk_to_agent: Headset,
     placeholder: Plus,
     default: MessageSquare
 };
@@ -39,6 +41,7 @@ const colors = {
     condition: 'bg-yellow-100 text-yellow-600 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
     webhook: 'bg-pink-100 text-pink-600 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800',
     delay: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+    talk_to_agent: 'bg-amber-100 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800',
     placeholder: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
     default: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
 };
@@ -82,6 +85,7 @@ export default memo(({ id, data }) => {
     const isCondition = data.type === 'condition';
     const isWebhook = data.type === 'webhook';
     const isDelay = data.type === 'delay';
+    const isTalkToAgent = data.type === 'talk_to_agent';
     const isPlaceholder = data.type === 'placeholder';
     const isEndWithLogic = isEnd;
 
@@ -163,9 +167,10 @@ export default memo(({ id, data }) => {
             {isCondition && <ConditionNode data={data} id={id} />}
             {isWebhook && <WebhookNode data={data} id={id} />}
             {isDelay && <DelayNode data={data} id={id} />}
+            {isTalkToAgent && <TalkToAgentNode data={data} id={id} />}
             {isEndWithLogic && <EndNode data={data} id={id} />}
 
-            {!isEnd && !isButtons && !isList && !isCondition && !isPlaceholder && (
+            {!isEnd && !isButtons && !isList && !isCondition && !isPlaceholder && !isTalkToAgent && (
                 <Handle
                     type="source"
                     position={Position.Bottom}
