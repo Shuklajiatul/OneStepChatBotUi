@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card"
-import { MessageSquare, MousePointerClick, Zap, MessageCircle, Cloud, List, Webhook, Clock, StopCircle, Play } from "lucide-react"
+import { MessageSquare, MousePointerClick, Zap, MessageCircle, Cloud, List, Webhook, Clock, StopCircle, Play, Headset } from "lucide-react"
 
 export function NodeSidebar() {
     const onDragStart = (event, nodeType) => {
@@ -79,6 +79,15 @@ export function NodeSidebar() {
                 >
                     <Webhook className="h-4 w-4 text-pink-500" />
                     <span className="text-sm">Webhook</span>
+                </div>
+
+                <div
+                    className="flex items-center gap-2 p-3 bg-muted/50 rounded-md border cursor-grab hover:bg-muted"
+                    onDragStart={(event) => onDragStart(event, 'talk_to_agent')}
+                    draggable
+                >
+                    <Headset className="h-4 w-4 text-amber-500" />
+                    <span className="text-sm">Talk to Agent</span>
                 </div>
 
                 <div
