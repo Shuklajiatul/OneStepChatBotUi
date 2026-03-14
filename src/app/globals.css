@@ -6,7 +6,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-jetbrains-mono);
+  --font-sans: var(--font-oswald);
   --font-mono: var(--font-jetbrains-mono);
   --font-heading: var(--font-knewave);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -103,7 +103,7 @@
   --sidebar-border: oklch(0.9276 0.0058 264.5313);
   --sidebar-ring: oklch(0.6397 0.172 36.4421);
   --destructive-foreground: oklch(1 0 0);
-  --font-sans: Inter, sans-serif;
+  --font-sans: var(--font-oswald);
   --font-serif: Source Serif 4, serif;
   --font-mono: JetBrains Mono, monospace;
   --shadow-color: hsl(0 0% 0%);
@@ -164,7 +164,7 @@
   --sidebar-ring: oklch(0.6397 0.172 36.4421);
   --destructive-foreground: oklch(1 0 0);
   --radius: 0.425rem;
-  --font-sans: Inter, sans-serif;
+  --font-sans: var(--font-oswald);
   --font-serif: Source Serif 4, serif;
   --font-mono: JetBrains Mono, monospace;
   --shadow-color: hsl(0 0% 0%);

@@ -65,7 +65,7 @@ export function AppSidebar({ ...props }) {
     const pathname = usePathname()
 
     return (
-        <Sidebar {...props}>
+        <Sidebar {...props} style={{ '--font-sans': 'var(--font-jetbrains-mono)', fontFamily: 'var(--font-jetbrains-mono)' }}>
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
