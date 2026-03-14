@@ -19,7 +19,7 @@ import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NodeSidebar } from './node-sidebar';
-import { Save, Trash, Loader2, ArrowLeft, Plus, MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, StopCircle, Play } from 'lucide-react';
+import { Save, Trash, Loader2, ArrowLeft, Plus, MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, StopCircle, Play, Headset } from 'lucide-react';
 import CustomNode from '../custom-node';
 import { toast } from "sonner"
 import {
@@ -144,6 +144,12 @@ function FlowEditor({ params }) {
                 label = "Delay";
                 subtext = `${node.data.delay_seconds || 0}s`;
                 type = 'delay';
+            } else if (node.type === 'talk_to_agent') {
+                label = "Talk to Agent";
+                subtext = node.data.waitMessage
+                    ? node.data.waitMessage.substring(0, 30) + (node.data.waitMessage.length > 30 ? '...' : '')
+                    : `Timeout: ${node.data.timeoutSeconds || 60}s`;
+                type = 'talk_to_agent';
             } else if (node.type === 'start' || node.id === 'start') {
                 label = "Start";
                 subtext = "Flow entry";
@@ -256,6 +262,35 @@ function FlowEditor({ params }) {
         }
 
         setNodes(layoutNodes);
+
+        // Build edges: first from node.next chains, then supplement with raw flowData.edges
+        const edgeIds = new Set(newEdges.map(e => e.id));
+        if (flowData.edges && Array.isArray(flowData.edges)) {
+            flowData.edges.forEach(rawEdge => {
+                // Normalize the edge - strip ReactFlow-specific sourceHandle 'source' for standard edges
+                const isStandard = !rawEdge.sourceHandle || rawEdge.sourceHandle === 'source' || rawEdge.sourceHandle === 'default';
+                const normalizedId = isStandard
+                    ? `e-${rawEdge.source}-${rawEdge.target}`
+                    : `e-${rawEdge.source}-${rawEdge.target}-${rawEdge.sourceHandle}`;
+
+                // Only add if not already covered by node.next reconstruction
+                if (!edgeIds.has(normalizedId) && !edgeIds.has(rawEdge.id)) {
+                    edgeIds.add(normalizedId);
+                    newEdges.push({
+                        id: normalizedId,
+                        source: rawEdge.source,
+                        sourceHandle: isStandard ? undefined : rawEdge.sourceHandle,
+                        target: rawEdge.target,
+                        targetHandle: rawEdge.targetHandle,
+                        type: rawEdge.type || 'smoothstep',
+                        markerEnd: rawEdge.markerEnd || { type: MarkerType.ArrowClosed },
+                        label: rawEdge.label,
+                        style: rawEdge.style,
+                    });
+                }
+            });
+        }
+
         setEdges(newEdges);
 
         // Fit view after a small delay to allow node rendering
@@ -407,6 +442,7 @@ function FlowEditor({ params }) {
             if (type === 'condition') label = 'Condition';
             if (type === 'webhook') label = 'Webhook';
             if (type === 'delay') label = 'Delay';
+            if (type === 'talk_to_agent') label = 'Talk to Agent';
             if (type === 'end') label = 'End';
 
             const newNode = {
@@ -446,7 +482,8 @@ function FlowEditor({ params }) {
                 };
 
                 // Handle single output nodes (start, message, question, etc.)
-                const standardOutgoingEdge = edges.find(edge => edge.source === node.id && (!edge.sourceHandle || edge.sourceHandle === 'source' || edge.sourceHandle === 'default' || edge.sourceHandle === 'a') && !edge.label);
+                const currentEdges = flow.edges;
+                const standardOutgoingEdge = currentEdges.find(edge => edge.source === node.id && (!edge.sourceHandle || edge.sourceHandle === 'source' || edge.sourceHandle === 'default' || edge.sourceHandle === 'a') && !edge.label);
                 if (standardOutgoingEdge) {
                     backendNode.next = standardOutgoingEdge.target;
                 }
@@ -454,7 +491,7 @@ function FlowEditor({ params }) {
                 // Handle Buttons output
                 if (nodeType === 'buttons' && backendNode.data.buttons) {
                     backendNode.data.buttons = backendNode.data.buttons.map(btn => {
-                        const btnEdge = edges.find(edge => edge.source === node.id && edge.sourceHandle === `btn-${btn.id}`);
+                        const btnEdge = flow.edges.find(edge => edge.source === node.id && edge.sourceHandle === `btn-${btn.id}`);
                         return { ...btn, next: btnEdge ? btnEdge.target : null };
                     });
                 }
@@ -471,7 +508,7 @@ function FlowEditor({ params }) {
                         backendNode.data.sections = originalData.sections.map(section => ({
                             title: section.title || "Section",
                             rows: (section.rows || []).map(row => {
-                                const rowEdge = edges.find(edge =>
+                                const rowEdge = flow.edges.find(edge =>
                                     edge.source === node.id && edge.sourceHandle === `row-${row.id}`
                                 );
                                 return {
@@ -518,8 +555,8 @@ function FlowEditor({ params }) {
 
                 // Handle Condition output
                 if (nodeType === 'condition') {
-                    const trueEdge = edges.find(edge => edge.source === node.id && edge.sourceHandle === 'true');
-                    const falseEdge = edges.find(edge => edge.source === node.id && edge.sourceHandle === 'false');
+                    const trueEdge = flow.edges.find(edge => edge.source === node.id && edge.sourceHandle === 'true');
+                    const falseEdge = flow.edges.find(edge => edge.source === node.id && edge.sourceHandle === 'false');
 
                     if (backendNode.data.conditions) {
                         backendNode.data.conditions = backendNode.data.conditions.map(cond => ({
@@ -530,6 +567,20 @@ function FlowEditor({ params }) {
                     backendNode.data.default_next = falseEdge ? falseEdge.target : null;
                     backendNode.data.logicOperator = (backendNode.data.logicOperator || 'and').toUpperCase();
                     backendNode.next = null;
+                }
+
+                // Handle Talk to Agent output
+                if (nodeType === 'talk_to_agent') {
+                    const wd = node.data.originalData?.data || {};
+                    backendNode.data = {
+                        label: 'Talk to Agent',
+                        waitMessage: wd.waitMessage || 'Please wait, connecting you to a support agent...',
+                        timeoutMessage: wd.timeoutMessage || 'Sorry, no agents available. We\'ll get back to you.',
+                        timeoutSeconds: wd.timeoutSeconds ?? 60,
+                        fallbackNodeId: standardOutgoingEdge ? standardOutgoingEdge.target : null,
+                    };
+                    // The 'next' edge becomes the fallback
+                    backendNode.next = standardOutgoingEdge ? standardOutgoingEdge.target : null;
                 }
 
                 return backendNode;
@@ -648,6 +699,7 @@ function FlowEditor({ params }) {
         { type: 'condition', label: 'Condition', icon: Zap, color: 'text-yellow-500' },
         { type: 'webhook', label: 'Webhook', icon: Webhook, color: 'text-pink-500' },
         { type: 'delay', label: 'Delay', icon: Clock, color: 'text-gray-500' },
+        { type: 'talk_to_agent', label: 'Talk to Agent', icon: Headset, color: 'text-amber-500' },
         { type: 'end', label: 'End', icon: StopCircle, color: 'text-red-500' },
     ];
 
