@@ -469,6 +469,11 @@ function FlowEditor({ params }) {
             const flow = reactFlowInstance.toObject();
             const currentNodes = reactFlowInstance.getNodes();
 
+            const validNodeIds = new Set(currentNodes.map(n => n.id));
+            const validEdges = [...flow.edges]
+                .filter(e => validNodeIds.has(e.target || e.targetNode))
+                .reverse();
+
             const backendNodes = currentNodes.map(node => {
                 const nodeType = node.data.originalData?.type || node.data.type || 'message';
                 const originalData = node.data.originalData?.data || { message: node.data.label };
@@ -482,17 +487,16 @@ function FlowEditor({ params }) {
                 };
 
                 // Handle single output nodes (start, message, question, etc.)
-                const currentEdges = flow.edges;
-                const standardOutgoingEdge = currentEdges.find(edge => edge.source === node.id && (!edge.sourceHandle || edge.sourceHandle === 'source' || edge.sourceHandle === 'default' || edge.sourceHandle === 'a') && !edge.label);
+                const standardOutgoingEdge = validEdges.find(edge => edge.source === node.id && (!edge.sourceHandle || edge.sourceHandle === 'source' || edge.sourceHandle === 'default' || edge.sourceHandle === 'a') && !edge.label);
                 if (standardOutgoingEdge) {
-                    backendNode.next = standardOutgoingEdge.target;
+                    backendNode.next = standardOutgoingEdge.target || standardOutgoingEdge.targetNode;
                 }
 
                 // Handle Buttons output
                 if (nodeType === 'buttons' && backendNode.data.buttons) {
                     backendNode.data.buttons = backendNode.data.buttons.map(btn => {
-                        const btnEdge = flow.edges.find(edge => edge.source === node.id && edge.sourceHandle === `btn-${btn.id}`);
-                        return { ...btn, next: btnEdge ? btnEdge.target : null };
+                        const btnEdge = validEdges.find(edge => edge.source === node.id && edge.sourceHandle === `btn-${btn.id}`);
+                        return { ...btn, next: btnEdge ? (btnEdge.target || btnEdge.targetNode) : null };
                     });
                 }
 
@@ -508,14 +512,14 @@ function FlowEditor({ params }) {
                         backendNode.data.sections = originalData.sections.map(section => ({
                             title: section.title || "Section",
                             rows: (section.rows || []).map(row => {
-                                const rowEdge = flow.edges.find(edge =>
+                                const rowEdge = validEdges.find(edge =>
                                     edge.source === node.id && edge.sourceHandle === `row-${row.id}`
                                 );
                                 return {
                                     id: row.id || uuidv4(),
                                     title: row.title || "Option",
                                     description: row.description || "",
-                                    next: rowEdge ? rowEdge.target : null
+                                    next: rowEdge ? (rowEdge.target || rowEdge.targetNode) : null
                                 };
                             })
                         }));
@@ -555,16 +559,16 @@ function FlowEditor({ params }) {
 
                 // Handle Condition output
                 if (nodeType === 'condition') {
-                    const trueEdge = flow.edges.find(edge => edge.source === node.id && edge.sourceHandle === 'true');
-                    const falseEdge = flow.edges.find(edge => edge.source === node.id && edge.sourceHandle === 'false');
+                    const trueEdge = validEdges.find(edge => edge.source === node.id && edge.sourceHandle === 'true');
+                    const falseEdge = validEdges.find(edge => edge.source === node.id && edge.sourceHandle === 'false');
 
                     if (backendNode.data.conditions) {
                         backendNode.data.conditions = backendNode.data.conditions.map(cond => ({
                             ...cond,
-                            next: trueEdge ? trueEdge.target : null
+                            next: trueEdge ? (trueEdge.target || trueEdge.targetNode) : null
                         }));
                     }
-                    backendNode.data.default_next = falseEdge ? falseEdge.target : null;
+                    backendNode.data.default_next = falseEdge ? (falseEdge.target || falseEdge.targetNode) : null;
                     backendNode.data.logicOperator = (backendNode.data.logicOperator || 'and').toUpperCase();
                     backendNode.next = null;
                 }
@@ -580,7 +584,7 @@ function FlowEditor({ params }) {
                         fallbackNodeId: standardOutgoingEdge ? standardOutgoingEdge.target : null,
                     };
                     // The 'next' edge becomes the fallback
-                    backendNode.next = standardOutgoingEdge ? standardOutgoingEdge.target : null;
+                    backendNode.next = standardOutgoingEdge ? (standardOutgoingEdge.target || standardOutgoingEdge.targetNode) : null;
                 }
 
                 return backendNode;
