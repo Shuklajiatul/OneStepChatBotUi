@@ -30,6 +30,7 @@ import {
 } from "lucide-react"
 import { useLiveChat } from "@/hooks/useLiveChat"
 import { renderMessage } from "@/lib/renderMessage"
+import { AgentRequestCard } from "@/components/AgentRequestCard"
 
 export default function LiveChatPage() {
     const [selectedFlowId, setSelectedFlowId] = useState(null)
@@ -43,8 +44,12 @@ export default function LiveChatPage() {
         mode,
         isConnected,
         isLoadingHistory,
+        agentRequests,
+        setAgentRequests,
         selectConversation,
         takeover,
+        acceptAgentRequest,
+        rejectAgentRequest,
         sendMessage,
         handback,
     } = useLiveChat(selectedFlowId)
@@ -437,7 +442,7 @@ export default function LiveChatPage() {
                         </div>
                     </CardHeader>
                     <CardContent className="flex-1 p-0 overflow-hidden bg-muted/20">
-                        {filteredConversations.length === 0 ? (
+                        {filteredConversations.length === 0 && agentRequests.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
                                 <div className="bg-primary/10 rounded-full p-4 mb-3">
                                     <MessageSquare className="h-6 w-6 text-primary/60" />
@@ -452,12 +457,71 @@ export default function LiveChatPage() {
                         ) : (
                             <ScrollArea className="h-full">
                                 <div className="flex flex-col">
+                                    {/* Agent Requests Queue */}
+                                    {agentRequests.length > 0 && (
+                                        <div className="p-3 border-b border-border/50 bg-muted/10">
+                                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                                Agent Requests ({agentRequests.length})
+                                            </h4>
+                                            <div className="flex flex-col gap-2">
+                                                {agentRequests.map(req => (
+                                                    <AgentRequestCard
+                                                        key={req.conversationId}
+                                                        request={req}
+                                                        onAccept={acceptAgentRequest}
+                                                        onReject={rejectAgentRequest}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Normal Conversations List */}
                                     {filteredConversations.map((conv) => {
                                         const isActive =
                                             activeConversation?.conversation_id ===
                                             conv.conversation_id
-                                        const isTakeover =
-                                            conv.status === "human_takeover"
+                                        const isTakeover = conv.status === "human_takeover"
+                                        const isPending = conv.status === "pending_agent"
+                                        const isCompleted = conv.status === "completed"
+
+                                        let statusConfig = {
+                                            variant: "secondary",
+                                            bgColor: "bg-green-500",
+                                            bgClass: "bg-green-500/10",
+                                            textClass: "text-green-600",
+                                            borderClass: "border-0",
+                                            label: "Bot Active",
+                                        }
+
+                                        if (isTakeover) {
+                                            statusConfig = {
+                                                variant: "outline",
+                                                bgColor: "bg-amber-500",
+                                                bgClass: "bg-amber-500/10",
+                                                textClass: "text-amber-600",
+                                                borderClass: "border-amber-500/50",
+                                                label: "Agent",
+                                            }
+                                        } else if (isPending) {
+                                            statusConfig = {
+                                                variant: "outline",
+                                                bgColor: "bg-red-500",
+                                                bgClass: "bg-red-500/10",
+                                                textClass: "text-red-500",
+                                                borderClass: "border-red-500/50",
+                                                label: "Waiting",
+                                            }
+                                        } else if (isCompleted) {
+                                            statusConfig = {
+                                                variant: "secondary",
+                                                bgColor: "bg-gray-500",
+                                                bgClass: "bg-gray-500/10",
+                                                textClass: "text-gray-500",
+                                                borderClass: "border-0",
+                                                label: "Completed",
+                                            }
+                                        }
 
                                         return (
                                             <button
@@ -470,10 +534,7 @@ export default function LiveChatPage() {
                                             >
                                                 <Avatar className="h-9 w-9 flex-shrink-0 mt-0.5">
                                                     <AvatarFallback
-                                                        className={`text-xs font-bold ${isTakeover
-                                                            ? "bg-amber-500/20 text-amber-700"
-                                                            : "bg-primary/10 text-primary"
-                                                            }`}
+                                                        className={`text-xs font-bold ${isTakeover ? "bg-amber-500/20 text-amber-700" : isPending ? "bg-red-500/20 text-red-700" : "bg-primary/10 text-primary"}`}
                                                     >
                                                         {(
                                                             conv.customer_name ||
@@ -501,23 +562,13 @@ export default function LiveChatPage() {
                                                         {conv.last_message || "No messages"}
                                                     </p>
                                                     <Badge
-                                                        variant={
-                                                            isTakeover
-                                                                ? "outline"
-                                                                : "secondary"
-                                                        }
-                                                        className={`mt-1.5 text-[10px] px-1.5 py-0 ${isTakeover
-                                                            ? "border-amber-500/50 text-amber-600 bg-amber-500/10"
-                                                            : "text-green-600 bg-green-500/10"
-                                                            }`}
+                                                        variant={statusConfig.variant}
+                                                        className={`mt-1.5 text-[10px] px-1.5 py-0 ${statusConfig.borderClass} ${statusConfig.textClass} ${statusConfig.bgClass}`}
                                                     >
                                                         <span
-                                                            className={`h-1.5 w-1.5 rounded-full mr-1 ${isTakeover
-                                                                ? "bg-amber-500"
-                                                                : "bg-green-500"
-                                                                }`}
+                                                            className={`h-1.5 w-1.5 rounded-full mr-1 ${statusConfig.bgColor}`}
                                                         />
-                                                        {isTakeover ? "Agent" : "Bot Active"}
+                                                        {statusConfig.label}
                                                     </Badge>
                                                 </div>
                                             </button>
