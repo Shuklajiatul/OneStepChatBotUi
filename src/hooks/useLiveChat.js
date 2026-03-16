@@ -11,6 +11,7 @@ export function useLiveChat(flowId) {
     const [mode, setMode] = useState('active');
     const [isConnected, setIsConnected] = useState(false);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [agentRequests, setAgentRequests] = useState([]);
     const socketRef = useRef(null);
     const activeConversationRef = useRef(null);
 
@@ -48,6 +49,17 @@ export function useLiveChat(flowId) {
                 // Sort by latest message first
                 formatted.sort((a, b) => new Date(b.last_message_at) - new Date(a.last_message_at));
                 setConversations(formatted);
+
+                // Initialize agent request queue from pending conversations
+                const pending = data.activeConversations.filter(c => c.status === 'pending_agent');
+                setAgentRequests(pending.map(c => ({
+                    conversationId: c.conversation_id,
+                    customerPhone: c.user_phone,
+                    customerName: c.user_name || c.user_phone,
+                    requestedAt: c.last_message_at || c.started_at,
+                    previewMessages: [],
+                    fallbackNodeId: null
+                })));
             }
         });
 
@@ -99,6 +111,9 @@ export function useLiveChat(flowId) {
 
         // ─── Receive: Takeover Events ───
         socket.on('admin:takeover_confirmed', (data) => {
+            // Remove from queue if it was an agent request that we accepted
+            setAgentRequests(prev => prev.filter(r => r.conversationId !== data.conversationId));
+
             setMode('takeover');
             if (data.chatHistory) {
                 const sorted = [...data.chatHistory].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -149,7 +164,6 @@ export function useLiveChat(flowId) {
         socket.on('admin:conversation_completed', ({ conversationId, status }) => {
             // Remove from the conversations list
             setConversations((prev) => prev.filter((c) => c.conversation_id !== conversationId));
-            // If this was the open conversation, clear the chat panel
             if (activeConversationRef.current?.conversation_id === conversationId) {
                 setActiveConversation(null);
                 setMessages([]);
@@ -158,8 +172,33 @@ export function useLiveChat(flowId) {
         });
 
         // Error from server
-        socket.on('admin:error', ({ message }) => {
+        socket.on('admin:error', ({ message, conversationId }) => {
             console.error('[LiveChat Error]', message);
+            if (message && message.includes('already been accepted')) {
+                if (conversationId) {
+                    setAgentRequests((prev) => prev.filter((r) => r.conversationId !== conversationId));
+                }
+            }
+        });
+
+        // ─── Receive: Agent Requests ───
+        socket.on('admin:agent_request', (data) => {
+            setAgentRequests((prev) => {
+                if (prev.find((r) => r.conversationId === data.conversationId)) return prev;
+                return [...prev, data];
+            });
+        });
+
+        socket.on('admin:agent_request_accepted', ({ conversationId }) => {
+            setAgentRequests((prev) => prev.filter((r) => r.conversationId !== conversationId));
+        });
+
+        socket.on('admin:agent_request_rejected', ({ conversationId }) => {
+            setAgentRequests((prev) => prev.filter((r) => r.conversationId !== conversationId));
+        });
+
+        socket.on('admin:agent_request_timeout', ({ conversationId }) => {
+            setAgentRequests((prev) => prev.filter((r) => r.conversationId !== conversationId));
         });
 
         return () => {
@@ -173,6 +212,10 @@ export function useLiveChat(flowId) {
             socket.off('admin:conversation_status_changed');
             socket.off('admin:conversation_completed');
             socket.off('admin:error');
+            socket.off('admin:agent_request');
+            socket.off('admin:agent_request_accepted');
+            socket.off('admin:agent_request_rejected');
+            socket.off('admin:agent_request_timeout');
         };
     }, [flowId]);
 
@@ -211,6 +254,15 @@ export function useLiveChat(flowId) {
         socketRef.current?.emit('admin:takeover', { conversationId });
     }, []);
 
+    const acceptAgentRequest = useCallback((conversationId) => {
+        socketRef.current?.emit('admin:accept_agent_request', { conversationId });
+    }, []);
+
+    const rejectAgentRequest = useCallback((conversationId) => {
+        socketRef.current?.emit('admin:reject_agent_request', { conversationId });
+        setAgentRequests(prev => prev.filter(r => r.conversationId !== conversationId));
+    }, []);
+
     const sendMessage = useCallback((conversationId, text) => {
         socketRef.current?.emit('admin:send_message', { conversationId, text });
     }, []);
@@ -226,8 +278,12 @@ export function useLiveChat(flowId) {
         mode,
         isConnected,
         isLoadingHistory,
+        agentRequests,
+        setAgentRequests,
         selectConversation,
         takeover,
+        acceptAgentRequest,
+        rejectAgentRequest,
         sendMessage,
         handback,
     };
