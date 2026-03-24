@@ -31,6 +31,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -193,15 +194,15 @@ export default function WorkflowsPage() {
     const currentSortLabel = SORT_OPTIONS.find(o => o.value === sortBy)?.label || 'Sort';
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 p-8 pt-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Workflows</h2>
-                    <p className="text-muted-foreground">
+                    <h2 className="text-3xl font-bold tracking-tight">Workflows</h2>
+                    <p className="text-muted-foreground mt-1">
                         Manage and design your chatbot automation flows.
                     </p>
                 </div>
-                <Button onClick={handleCreateWrapper}>
+                <Button onClick={handleCreateWrapper} className="shadow-sm">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Create Workflow
                 </Button>
@@ -368,18 +369,17 @@ export default function WorkflowsPage() {
             )}
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent>
+                <AlertDialogContent className="sm:max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete Workflow?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the workflow
-                            and remove it from our servers.
+                            This will permanently delete the workflow. All connected data, metrics, and integrations for this flow will be lost. This cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className="mt-4">
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete
+                            Delete Flow
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
