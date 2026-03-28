@@ -37,7 +37,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { MessageCircle, Cloud, CheckCircle2, Loader2, Plus, ArrowLeft, Trash2 } from "lucide-react"
+import { MessageCircle, Cloud, CheckCircle2, Loader2, Plus, ArrowLeft, Trash2, Globe, Copy, Check, Code } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
@@ -52,6 +52,11 @@ export default function IntegrationsPage() {
     const [isSaving, setIsSaving] = useState(false)
     const [dialogView, setDialogView] = useState("list")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+    // Web Chat Widget state
+    const [webChatDialogOpen, setWebChatDialogOpen] = useState(false)
+    const [webChatFlowId, setWebChatFlowId] = useState("")
+    const [copied, setCopied] = useState(false)
 
     useEffect(() => {
         fetchWorkflows()
@@ -376,6 +381,116 @@ export default function IntegrationsPage() {
                                 </div>
                                 <DialogFooter>
                                     <Button onClick={() => setInstagramConfig(true)}>Connect Account</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </CardFooter>
+                </Card>
+
+                {/* Web Chat Widget Integration */}
+                <Card className={webChatFlowId ? "border-blue-500/50 bg-blue-500/5 dark:bg-blue-500/10" : ""}>
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                <Globe className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <CardTitle>Web Chat</CardTitle>
+                        </div>
+                        <CardDescription>
+                            Embed a chat widget on any website with a simple script tag.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {webChatFlowId ? (
+                            <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                                <CheckCircle2 className="h-4 w-4" /> Widget configured
+                            </div>
+                        ) : (
+                            <div className="text-sm text-muted-foreground">Not configured</div>
+                        )}
+                    </CardContent>
+                    <CardFooter>
+                        <Dialog open={webChatDialogOpen} onOpenChange={(open) => {
+                            setWebChatDialogOpen(open)
+                            if (!open) setCopied(false)
+                        }}>
+                            <DialogTrigger asChild>
+                                <Button variant={webChatFlowId ? "outline" : "default"}>
+                                    <Code className="mr-2 h-4 w-4" />
+                                    {webChatFlowId ? "View Embed Code" : "Configure"}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[650px]">
+                                <DialogHeader>
+                                    <DialogTitle>Web Chat Widget</DialogTitle>
+                                    <DialogDescription>
+                                        Select a workflow and copy the embed code to add a chat widget to your website.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="widget-flow" className="text-right">
+                                            Workflow
+                                        </Label>
+                                        <div className="col-span-3">
+                                            <Select value={webChatFlowId} onValueChange={(val) => { setWebChatFlowId(val); setCopied(false); }}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a workflow" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {workflows.map((flow) => (
+                                                        <SelectItem key={flow.flow_id} value={flow.flow_id}>
+                                                            {flow.flow_name}
+                                                        </SelectItem>
+                                                    ))}
+                                                    {workflows.length === 0 && (
+                                                        <div className="p-2 text-xs text-muted-foreground text-center">
+                                                            No workflows found.
+                                                        </div>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    {webChatFlowId && (
+                                        <div className="space-y-3">
+                                            <Label>Embed Code</Label>
+                                            <div className="relative">
+                                                <pre className="bg-muted rounded-lg p-4 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all border">{`<!-- Chat Widget -->
+<script>
+  window.ChatWidgetConfig = {
+    flowId: "${webChatFlowId}",
+    serverUrl: "${(process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_URL || 'http://localhost:3006/api').replace(/\/+$/, '')}",
+    title: "Chat Support",
+    primaryColor: "#e85d04"
+  };
+</script>
+<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/chat-widget.js"></script>`}</pre>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="absolute top-2 right-2 gap-1.5"
+                                                    onClick={() => {
+                                                        const code = `<!-- Chat Widget -->\n<script>\n  window.ChatWidgetConfig = {\n    flowId: "${webChatFlowId}",\n    serverUrl: "${(process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_URL || 'http://localhost:3006/api').replace(/\/+$/, '')}",\n    title: "Chat Support",\n    primaryColor: "#e85d04"\n  };\n</script>\n<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/chat-widget.js"></script>`;
+                                                        navigator.clipboard.writeText(code);
+                                                        setCopied(true);
+                                                        toast.success("Embed code copied to clipboard!");
+                                                        setTimeout(() => setCopied(false), 3000);
+                                                    }}
+                                                >
+                                                    {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                                    {copied ? "Copied" : "Copy"}
+                                                </Button>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Paste this code just before the closing <code className="bg-muted px-1 rounded">&lt;/body&gt;</code> tag on your website.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="outline" size="sm" onClick={() => setWebChatDialogOpen(false)}>Close</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
