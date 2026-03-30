@@ -416,6 +416,50 @@ function FlowEditor({ params }) {
         event.dataTransfer.dropEffect = 'move';
     }, []);
 
+    // Find the closest edge to a given flow position
+    const getClosestEdge = useCallback((flowPosition) => {
+        const currentNodes = reactFlowInstance?.getNodes();
+        const currentEdges = reactFlowInstance?.getEdges();
+        if (!currentNodes || !currentEdges) return null;
+
+        const nodePositionMap = new Map();
+        currentNodes.forEach(n => {
+            const w = n.measured?.width || 150;
+            const h = n.measured?.height || 56;
+            nodePositionMap.set(n.id, {
+                cx: n.position.x + w / 2,
+                cy: n.position.y + h / 2,
+                bottom: { x: n.position.x + w / 2, y: n.position.y + h },
+                top: { x: n.position.x + w / 2, y: n.position.y },
+            });
+        });
+
+        const THRESHOLD = 80;
+        let closestEdge = null;
+        let closestDist = Infinity;
+
+        for (const edge of currentEdges) {
+            const sourcePos = nodePositionMap.get(edge.source);
+            const targetPos = nodePositionMap.get(edge.target);
+            if (!sourcePos || !targetPos) continue;
+
+            // Edge goes from source bottom handle to target top handle
+            const midX = (sourcePos.bottom.x + targetPos.top.x) / 2;
+            const midY = (sourcePos.bottom.y + targetPos.top.y) / 2;
+
+            const dx = flowPosition.x - midX;
+            const dy = flowPosition.y - midY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < closestDist && dist < THRESHOLD) {
+                closestDist = dist;
+                closestEdge = edge;
+            }
+        }
+
+        return closestEdge;
+    }, [reactFlowInstance]);
+
     const onDrop = useCallback(
         (event) => {
             event.preventDefault();
@@ -445,16 +489,48 @@ function FlowEditor({ params }) {
             if (type === 'talk_to_agent') label = 'Talk to Agent';
             if (type === 'end') label = 'End';
 
+            const newNodeId = uuidv4();
+
             const newNode = {
-                id: uuidv4(),
+                id: newNodeId,
                 type: 'custom',
                 position,
                 data: { label: `${label}`, type: type },
             };
 
-            setNodes((nds) => nds.concat(newNode));
+            // Check if the node was dropped on an existing edge
+            const closestEdge = getClosestEdge(position);
+
+            if (closestEdge) {
+                // Split the edge: remove the old edge and insert the new node in between
+                const edgeToSource = {
+                    id: `e-${closestEdge.source}-${newNodeId}`,
+                    source: closestEdge.source,
+                    sourceHandle: closestEdge.sourceHandle,
+                    target: newNodeId,
+                    type: 'smoothstep',
+                    markerEnd: { type: MarkerType.ArrowClosed },
+                };
+
+                const edgeToTarget = {
+                    id: `e-${newNodeId}-${closestEdge.target}`,
+                    source: newNodeId,
+                    target: closestEdge.target,
+                    type: 'smoothstep',
+                    markerEnd: { type: MarkerType.ArrowClosed },
+                };
+
+                setNodes((nds) => nds.concat(newNode));
+                setEdges((eds) =>
+                    eds
+                        .filter((e) => e.id !== closestEdge.id)
+                        .concat([edgeToSource, edgeToTarget])
+                );
+            } else {
+                setNodes((nds) => nds.concat(newNode));
+            }
         },
-        [reactFlowInstance, setNodes],
+        [reactFlowInstance, setNodes, setEdges, getClosestEdge],
     );
 
     const deleteSelected = useCallback(() => {
