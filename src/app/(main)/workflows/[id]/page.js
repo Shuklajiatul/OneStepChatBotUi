@@ -605,9 +605,9 @@ function FlowEditor({ params }) {
 
                 // Handle Question output
                 if (nodeType === 'question') {
-                    backendNode.data.question = node.data.question || (typeof node.data.label === 'string' ? node.data.label : "") || "";
-                    backendNode.data.variable_name = node.data.variable_name || "";
-                    backendNode.data.validation_type = node.data.validation_type || "text";
+                    backendNode.data.question = node.data.question ?? backendNode.data.question ?? (typeof node.data.label === 'string' ? node.data.label : "") ?? "";
+                    backendNode.data.variable_name = node.data.variable_name ?? backendNode.data.variable_name ?? "";
+                    backendNode.data.validation_type = node.data.validation_type ?? backendNode.data.validation_type ?? "text";
                 }
 
                 // Handle Webhook output
