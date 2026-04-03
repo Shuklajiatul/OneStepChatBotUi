@@ -19,6 +19,7 @@ import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NodeSidebar } from './node-sidebar';
+import { useBreadcrumbs } from '@/contexts/BreadcrumbContext';
 import { Save, Trash, Loader2, ArrowLeft, Plus, MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, StopCircle, Play, Headset } from 'lucide-react';
 import CustomNode from '../custom-node';
 import { toast } from "sonner"
@@ -51,6 +52,7 @@ function FlowEditor({ params }) {
     const [isNewWorkflow, setIsNewWorkflow] = useState(false);
     const [isMetadataDialogOpen, setIsMetadataDialogOpen] = useState(false);
     const [isAddNodeOpen, setIsAddNodeOpen] = useState(false);
+    const { setBreadcrumbTitle } = useBreadcrumbs();
 
     const nodeTypes = useMemo(() => ({ custom: CustomNode }), []);
 
@@ -65,6 +67,12 @@ function FlowEditor({ params }) {
             fetchWorkflow(id);
         }
     }, [id]);
+
+    useEffect(() => {
+        if (id && workflowName) {
+            setBreadcrumbTitle(id, workflowName);
+        }
+    }, [id, workflowName, setBreadcrumbTitle]);
 
     const fetchWorkflow = async (workflowId) => {
         try {
