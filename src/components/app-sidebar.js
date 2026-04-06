@@ -8,11 +8,14 @@ import {
   MessagesSquare,
   Radio,
   Settings,
+  LogOut,
   Image as ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logout } from "@/lib/actions/auth";
+import { toast } from "sonner";
 
 import {
   Sidebar,
@@ -116,6 +119,26 @@ export function AppSidebar({ ...props }) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={async () => {
+                    await logout();
+                    toast.success("Logged out successfully");
+                    window.location.href = "/login";
+                  }}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="font-mono font-bold">Logout</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

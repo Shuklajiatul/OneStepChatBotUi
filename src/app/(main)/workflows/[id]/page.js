@@ -271,17 +271,15 @@ function FlowEditor({ params }) {
 
         setNodes(layoutNodes);
 
-        // Build edges: first from node.next chains, then supplement with raw flowData.edges
+        // Build edges
         const edgeIds = new Set(newEdges.map(e => e.id));
         if (flowData.edges && Array.isArray(flowData.edges)) {
             flowData.edges.forEach(rawEdge => {
-                // Normalize the edge - strip ReactFlow-specific sourceHandle 'source' for standard edges
                 const isStandard = !rawEdge.sourceHandle || rawEdge.sourceHandle === 'source' || rawEdge.sourceHandle === 'default';
                 const normalizedId = isStandard
                     ? `e-${rawEdge.source}-${rawEdge.target}`
                     : `e-${rawEdge.source}-${rawEdge.target}-${rawEdge.sourceHandle}`;
 
-                // Only add if not already covered by node.next reconstruction
                 if (!edgeIds.has(normalizedId) && !edgeIds.has(rawEdge.id)) {
                     edgeIds.add(normalizedId);
                     newEdges.push({
