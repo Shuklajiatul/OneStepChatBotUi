@@ -9,7 +9,8 @@ import {
     Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toast } from "sonner"
+import { getAuthToken } from "@/lib/auth";
 import Image from "next/image";
 
 function AuthImage({ src, alt, className }) {
@@ -24,7 +25,7 @@ function AuthImage({ src, alt, className }) {
             try {
                 const res = await fetch(src, {
                     headers: {
-                        Authorization: `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+                        Authorization: `Bearer ${getAuthToken()}`,
                     },
                 });
                 if (res.ok) {
@@ -77,7 +78,7 @@ export default function MediaPage() {
             setIsLoading(true);
             const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/media/`, {
                 headers: {
-                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+                    Authorization: `Bearer ${getAuthToken()}`,
                 },
             });
             const data = await res.json();
@@ -118,7 +119,7 @@ export default function MediaPage() {
             const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/media/upload`, {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+                    Authorization: `Bearer ${getAuthToken()}`,
                 },
                 body: formData,
             });

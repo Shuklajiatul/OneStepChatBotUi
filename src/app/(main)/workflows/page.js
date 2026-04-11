@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import Link from "next/link"
 import { PlusCircle, MoreHorizontal, Pencil, Trash, Loader2, Search, ArrowUpDown, X } from "lucide-react"
+import { getAuthToken } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -74,7 +75,7 @@ export default function WorkflowsPage() {
             const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`
+                    'Authorization': `Bearer ${getAuthToken()}`
                 }
             });
 
@@ -169,7 +170,7 @@ export default function WorkflowsPage() {
             const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows/${deleteId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`
+                    'Authorization': `Bearer ${getAuthToken()}`
                 }
             });
 

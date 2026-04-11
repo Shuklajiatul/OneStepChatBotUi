@@ -33,7 +33,7 @@ export const DelayNode = ({ data, id }) => {
                 value={data.originalData?.data?.delay_seconds || 0}
                 onChange={handleChange}
                 className="nodrag text-xs h-8"
-                placeholder="0"
+                placeholder=""
             />
         </div>
     )

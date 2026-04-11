@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { getAuthToken } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -65,7 +66,7 @@ export default function LiveChatPage() {
             try {
                 const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows`, {
                     headers: {
-                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`
+                        'Authorization': `Bearer ${getAuthToken()}`
                     }
                 });
                 if (response.ok) {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { connectSocket, disconnectSocket } from '@/services/socket';
 import { fetchConversations, fetchMessages } from '@/services/liveChat';
+import { getAuthToken } from '@/lib/auth';
 
 export function useLiveChat(flowId) {
     const [conversations, setConversations] = useState([]);
@@ -23,7 +24,7 @@ export function useLiveChat(flowId) {
     useEffect(() => {
         if (!flowId) return;
 
-        const adminJwt = process.env.NEXT_PUBLIC_ACCESS_TOKEN;
+        const adminJwt = getAuthToken();
 
         // Step 1: Connect socket and subscribe
         const socket = connectSocket(adminJwt);

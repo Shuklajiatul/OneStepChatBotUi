@@ -1,7 +1,9 @@
+import { getAuthToken } from '@/lib/auth';
+
 const API = process.env.NEXT_PUBLIC_URL || 'http://localhost:3006/api';
 
 function authHeaders() {
-    return { Authorization: `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}` };
+    return { Authorization: `Bearer ${getAuthToken()}` };
 }
 
 // Load all active conversations for a flow

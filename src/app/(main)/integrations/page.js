@@ -40,6 +40,7 @@ import { Badge } from "@/components/ui/badge"
 import { MessageCircle, Cloud, CheckCircle2, Loader2, Plus, ArrowLeft, Trash2, Globe, Copy, Check, Code } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
+import { getAuthToken } from "@/lib/auth"
 
 export default function IntegrationsPage() {
     const [whatsappConfig, setWhatsappConfig] = useState(false)
@@ -68,7 +69,7 @@ export default function IntegrationsPage() {
             const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`
+                    'Authorization': `Bearer ${getAuthToken()}`
                 }
             });
 
@@ -107,7 +108,7 @@ export default function IntegrationsPage() {
             const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows/${selectedFlowId}/publish`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+                    'Authorization': `Bearer ${getAuthToken()}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -139,7 +140,7 @@ export default function IntegrationsPage() {
             const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows/${flowId}/unpublish`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+                    'Authorization': `Bearer ${getAuthToken()}`,
                     'Content-Type': 'application/json'
                 }
             });

@@ -23,6 +23,7 @@ import { useBreadcrumbs } from '@/contexts/BreadcrumbContext';
 import { Save, Trash, Loader2, ArrowLeft, Plus, MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, StopCircle, Play, Headset } from 'lucide-react';
 import CustomNode from '../custom-node';
 import { toast } from "sonner"
+import { getAuthToken } from "@/lib/auth"
 import {
     Dialog,
     DialogContent,
@@ -79,7 +80,7 @@ function FlowEditor({ params }) {
             const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/flows/${workflowId}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`
+                    'Authorization': `Bearer ${getAuthToken()}`
                 }
             });
 
@@ -740,7 +741,7 @@ function FlowEditor({ params }) {
             const response = await fetch(url, {
                 method,
                 headers: {
-                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+                    'Authorization': `Bearer ${getAuthToken()}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
