@@ -129,9 +129,20 @@ export function AppSidebar({ ...props }) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={async () => {
-                    await logout();
-                    toast.success("Logged out successfully");
-                    window.location.href = "/login";
+                    try {
+                      // Attempt server-side logout first for safety
+                      await logout().catch(() => { });
+
+                      // Client-side cookie cleanup as fallback/additional safety
+                      document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+                      toast.success("Logged out successfully");
+                      window.location.href = "/login";
+                    } catch (error) {
+                      console.error("Logout error:", error);
+                      // Force redirect anyway
+                      window.location.href = "/login";
+                    }
                   }}
                   className="text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
                 >

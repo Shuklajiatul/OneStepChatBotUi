@@ -1,6 +1,11 @@
-import { Knewave, JetBrains_Mono, Oswald } from "next/font/google";
+import { Knewave, JetBrains_Mono, Oswald, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 const knewave = Knewave({
   weight: "400",
@@ -9,7 +14,7 @@ const knewave = Knewave({
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -27,7 +32,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${knewave.variable} ${jetbrainsMono.variable} ${oswald.variable} antialiased`}
+        className={`${outfit.variable} ${knewave.variable} ${jetbrainsMono.variable} ${oswald.variable} antialiased`}
       >
         {children}
         <Toaster position="top-right" />
