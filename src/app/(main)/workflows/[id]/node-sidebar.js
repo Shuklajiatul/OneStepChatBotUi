@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card"
-import { MessageSquare, MousePointerClick, Zap, MessageCircle, Cloud, List, Webhook, Clock, StopCircle, Play, Headset } from "lucide-react"
+import { MessageSquare, MousePointerClick, Zap, MessageCircle, Cloud, List, Webhook, Clock, StopCircle, Play, Headset, Sparkles } from "lucide-react"
 
 export function NodeSidebar() {
     const onDragStart = (event, nodeType) => {
@@ -31,6 +31,15 @@ export function NodeSidebar() {
                 >
                     <MessageSquare className="h-4 w-4 text-blue-500" />
                     <span className="text-sm">Message</span>
+                </div>
+
+                <div
+                    className="flex items-center gap-2 p-3 bg-muted/50 rounded-md border cursor-grab hover:bg-muted"
+                    onDragStart={(event) => onDragStart(event, 'ai_bot')}
+                    draggable
+                >
+                    <Sparkles className="h-4 w-4 text-indigo-500" />
+                    <span className="text-sm">AI Bot</span>
                 </div>
 
                 <div

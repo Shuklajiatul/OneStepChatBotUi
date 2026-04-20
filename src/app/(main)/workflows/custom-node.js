@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
-import { MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, Play, StopCircle, Plus, Headset } from 'lucide-react';
+import { MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, Play, StopCircle, Plus, Headset, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
@@ -15,6 +15,7 @@ import { DelayNode } from './nodes/DelayNode';
 import { EndNode } from './nodes/EndNode';
 import { PlaceholderNode } from './nodes/PlaceholderNode';
 import { TalkToAgentNode } from './nodes/TalkToAgentNode';
+import { AiBotNode } from './nodes/AiBotNode';
 
 const icons = {
     start: Play,
@@ -27,6 +28,7 @@ const icons = {
     webhook: Webhook,
     delay: Clock,
     talk_to_agent: Headset,
+    ai_bot: Sparkles,
     placeholder: Plus,
     default: MessageSquare
 };
@@ -42,6 +44,7 @@ const colors = {
     webhook: 'bg-pink-100 text-pink-600 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800',
     delay: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
     talk_to_agent: 'bg-amber-100 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800',
+    ai_bot: 'bg-indigo-100 text-indigo-600 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800',
     placeholder: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
     default: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
 };
@@ -86,6 +89,7 @@ export default memo(({ id, data }) => {
     const isWebhook = data.type === 'webhook';
     const isDelay = data.type === 'delay';
     const isTalkToAgent = data.type === 'talk_to_agent';
+    const isAiBot = data.type === 'ai_bot';
     const isPlaceholder = data.type === 'placeholder';
     const isEndWithLogic = isEnd;
 
@@ -107,6 +111,7 @@ export default memo(({ id, data }) => {
                 ${isStart ? 'border-2 border-green-500 bg-green-50 dark:bg-green-900/20' : ''}
                 ${isEnd ? 'border-2 border-red-500 bg-red-50 dark:bg-red-900/20' : ''}
                 ${isPlaceholder ? 'border-none bg-transparent shadow-none !min-w-0 !p-0 !max-w-none' : ''}
+                ${isAiBot ? '!min-w-[420px] !max-w-[550px]' : ''}
                 ${!isStart && !isEnd && !isPlaceholder ? 'border px-3 py-3' : ''}
                 ${(isStart || isEnd) && !isPlaceholder ? 'px-4 py-3' : ''}
             `}
@@ -168,6 +173,7 @@ export default memo(({ id, data }) => {
             {isWebhook && <WebhookNode data={data} id={id} />}
             {isDelay && <DelayNode data={data} id={id} />}
             {isTalkToAgent && <TalkToAgentNode data={data} id={id} />}
+            {isAiBot && <AiBotNode data={data} id={id} />}
             {isEndWithLogic && <EndNode data={data} id={id} />}
 
             {!isEnd && !isButtons && !isList && !isCondition && !isPlaceholder && !isTalkToAgent && (

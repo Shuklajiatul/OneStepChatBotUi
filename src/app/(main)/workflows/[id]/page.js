@@ -15,12 +15,11 @@ import {
     MarkerType,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NodeSidebar } from './node-sidebar';
 import { useBreadcrumbs } from '@/contexts/BreadcrumbContext';
-import { Save, Trash, Loader2, ArrowLeft, Plus, MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, StopCircle, Play, Headset } from 'lucide-react';
+import { Save, Trash, Loader2, ArrowLeft, Plus, MessageSquare, MousePointerClick, Zap, List, Webhook, Clock, StopCircle, Play, Headset, Sparkles } from 'lucide-react';
 import CustomNode from '../custom-node';
 import { toast } from "sonner"
 import { getAuthToken } from "@/lib/auth"
@@ -159,6 +158,10 @@ function FlowEditor({ params }) {
                     ? node.data.waitMessage.substring(0, 30) + (node.data.waitMessage.length > 30 ? '...' : '')
                     : `Timeout: ${node.data.timeoutSeconds || 60}s`;
                 type = 'talk_to_agent';
+            } else if (node.type === 'ai_bot') {
+                label = "AI Bot";
+                subtext = node.data.ai_model ? node.data.ai_model.split('/').pop() : "AI Model";
+                type = 'ai_bot';
             } else if (node.type === 'start' || node.id === 'start') {
                 label = "Start";
                 subtext = "Flow entry";
@@ -258,6 +261,22 @@ function FlowEditor({ params }) {
                         type: 'smoothstep',
                         markerEnd: { type: MarkerType.ArrowClosed },
                         style: { stroke: '#ef4444', strokeWidth: 2 },
+                    });
+                }
+            }
+
+            // Handle AI Bot
+            if (node.type === 'ai_bot') {
+                if (node.data.exit_node_id) {
+                    newEdges.push({
+                        id: `e-${node.id}-${node.data.exit_node_id}-exit`,
+                        source: node.id,
+                        sourceHandle: 'exit',
+                        target: node.data.exit_node_id,
+                        label: 'Transfer',
+                        type: 'smoothstep',
+                        markerEnd: { type: MarkerType.ArrowClosed },
+                        style: { strokeDasharray: '5,5', stroke: '#ef4444' },
                     });
                 }
             }
@@ -494,6 +513,7 @@ function FlowEditor({ params }) {
             if (type === 'webhook') label = 'Webhook';
             if (type === 'delay') label = 'Delay';
             if (type === 'talk_to_agent') label = 'Talk to Agent';
+            if (type === 'ai_bot') label = 'AI Bot';
             if (type === 'end') label = 'End';
 
             const newNodeId = uuidv4();
@@ -670,6 +690,16 @@ function FlowEditor({ params }) {
                     backendNode.next = standardOutgoingEdge ? (standardOutgoingEdge.target || standardOutgoingEdge.targetNode) : null;
                 }
 
+                // Handle AI Bot output
+                if (nodeType === 'ai_bot') {
+                    const exitEdge = validEdges.find(edge => edge.source === node.id && edge.sourceHandle === 'exit');
+                    backendNode.data.exit_node_id = exitEdge ? (exitEdge.target || exitEdge.targetNode) : null;
+                    if (typeof backendNode.data.exit_keywords === 'string') {
+                        backendNode.data.exit_keywords = backendNode.data.exit_keywords.split(',').map(s => s.trim()).filter(Boolean);
+                    }
+                    backendNode.next = standardOutgoingEdge ? (standardOutgoingEdge.target || standardOutgoingEdge.targetNode) : null;
+                }
+
                 return backendNode;
             });
 
@@ -787,6 +817,7 @@ function FlowEditor({ params }) {
         { type: 'webhook', label: 'Webhook', icon: Webhook, color: 'text-pink-500' },
         { type: 'delay', label: 'Delay', icon: Clock, color: 'text-gray-500' },
         { type: 'talk_to_agent', label: 'Talk to Agent', icon: Headset, color: 'text-amber-500' },
+        { type: 'ai_bot', label: 'AI Bot', icon: Sparkles, color: 'text-indigo-500' },
         { type: 'end', label: 'End', icon: StopCircle, color: 'text-red-500' },
     ];
 

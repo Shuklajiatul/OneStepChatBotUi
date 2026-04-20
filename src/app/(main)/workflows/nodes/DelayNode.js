@@ -22,7 +22,7 @@ export const DelayNode = ({ data, id }) => {
             }
             return node;
         }));
-    }, [id, setNodes]);
+    }, [id, setNodes]); 
 
     return (
         <div className="flex flex-col gap-2 mt-2">
