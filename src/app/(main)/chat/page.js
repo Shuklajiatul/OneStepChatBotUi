@@ -112,7 +112,7 @@ export default function ChatPage() {
     };
 
     return (
-        <div className="flex flex-col gap-6 h-[calc(100vh-8rem)] w-full">
+        <div className="flex flex-col gap-6 h-[calc(100vh-8rem)] w-full mt-5">
             {/* Header */}
             <div className="space-y-2">
                 <div className="flex items-center justify-between">

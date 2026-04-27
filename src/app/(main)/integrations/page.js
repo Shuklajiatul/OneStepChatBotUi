@@ -161,7 +161,7 @@ export default function IntegrationsPage() {
     }
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 mt-5">
             <div>
                 <h2 className="text-2xl font-bold tracking-tight">Integrations</h2>
                 <p className="text-muted-foreground">
