@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Widget Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .demo-content {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .arrow {
+            position: fixed;
+            bottom: 100px;
+            right: 100px;
+            font-size: 2rem;
+            animation: bounce 1.5s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            /* 90% {
+                transform: rotate(90deg);
+            } */
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="demo-content">
+        <h1>Chat Widget Demo</h1>
+        <p>
+            This is a sample webpage demonstrating the embeddable chat widget.
+            Click the chat bubble in the bottom-right corner to start a conversation!
+        </p>
+    </div>
+
+    <div class="arrow">👇</div>
+
+    <!-- Chat Widget Integration -->
+    <script>
+        window.ChatWidgetConfig = {
+            flowId: "550e8400-e29b-41d4-a716-446655440000",
+            serverUrl: window.location.origin + "/api",
+            title: "Support Bot",
+            subtitle: "Online — replies instantly",
+            primaryColor: "#e85d04",
+            greeting: "Hi there! 👋 Start a conversation and test the chatbot."
+        };
+    </script>
+    <!-- <script src="/chat-widget.js"></script> -->
+
+    <!-- Chat Widget -->
+    <!-- <script>
+        window.ChatWidgetConfig = {
+            flowId: "0a6afd1a-67aa-42b4-a48c-83ec44c2b356",
+            serverUrl: "http://10.10.15.194:3006/api",
+            title: "Chat Support",
+            primaryColor: "#8855eeff"
+        };
+    </script> -->
+    <script src="http://10.10.15.194:3002/chat-widget.js"></script>
+</body>
+
+</html>
